@@ -15,20 +15,31 @@ public partial class MainWindow : Window
 {
     private readonly List<TimerEntry> _timers = new();
     private bool _widgetMode;
+    private string _baseTheme = "Black";
+    private string _accent = "Blue";
 
     public MainWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) =>
-        {
-            if (ThemeCombo != null) ThemeCombo.SelectedIndex = 0; // Midnight (Blue)
-        };
+        Loaded += (_, _) => ApplyAppearance();
     }
 
-    private void ThemeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void BaseTheme_Click(object sender, RoutedEventArgs e)
     {
-        if (ThemeCombo?.SelectedItem is ComboBoxItem item)
-            ApplyTheme(item.Tag?.ToString() ?? "Midnight");
+        if (sender is Button b && b.Tag is string tag)
+        {
+            _baseTheme = tag;
+            ApplyAppearance();
+        }
+    }
+
+    private void Accent_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button b && b.Tag is string tag)
+        {
+            _accent = tag;
+            ApplyAppearance();
+        }
     }
 
     private void PinToggle_Changed(object sender, RoutedEventArgs e)
@@ -60,51 +71,61 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ApplyTheme(string theme)
+    private void ApplyAppearance()
     {
-        switch (theme)
+        if (_baseTheme == "White")
         {
-            case "Black":
-                ApplyPalette("#000000", "#121212", "#0A0A0A", "#2A2A2A", "#F5F5F5", "#A3A3A3", "#2A2A2A", "#2A2A2A", "#3A3A3A", "#2A2A2A", "#7C5CFF", "#22D3EE");
-                break;
-            case "Light":
-                ApplyPalette("#F3F6FB", "#FFFFFF", "#F8FAFC", "#D5DEEA", "#0F172A", "#64748B", "#E2E8F0", "#E8EEF8", "#DCE6F5", "#E2E8F0", "#6C5CE7", "#0EA5E9");
-                break;
-            case "Orange":
-                ApplyPalette("#140D08", "#1F140C", "#120B07", "#3A2818", "#FFF3E8", "#D6BFA8", "#3A2818", "#3A2818", "#4A3320", "#3A2818", "#F97316", "#FDBA74");
-                break;
-            case "Red":
-                ApplyPalette("#14090B", "#1F1014", "#12080A", "#3A1E25", "#FFECEE", "#D8B0B7", "#3A1E25", "#3A1E25", "#4A2730", "#3A1E25", "#EF4444", "#F87171");
-                break;
-            case "Green":
-                ApplyPalette("#07120D", "#0E1B14", "#06100B", "#1E3528", "#E9FFF4", "#A9D2BC", "#1E3528", "#1E3528", "#294538", "#1E3528", "#10B981", "#34D399");
-                break;
-            case "Purple":
-                ApplyPalette("#100A18", "#171026", "#0D0814", "#30214A", "#F5EEFF", "#C8B3E6", "#30214A", "#30214A", "#3C2A5C", "#30214A", "#A855F7", "#C084FC");
-                break;
-            case "Midnight":
-            default:
-                ApplyPalette("#0F172A", "#1E293B", "#0B1220", "#334155", "#E5E7EB", "#94A3B8", "#334155", "#334155", "#475569", "#334155", "#7C5CFF", "#22D3EE");
-                break;
+            // White base theme
+            SetBrush("BgBrush", "#FFFFFF");
+            SetBrush("CardBrush", "#F6F7F9");
+            SetBrush("InputBrush", "#FFFFFF");
+            SetBrush("BorderBrushColor", "#D9DEE7");
+            SetBrush("TextBrush", "#111827");
+            SetBrush("SubtleTextBrush", "#6B7280");
+            SetBrush("GhostBrush", "#E5E7EB");
+            SetBrush("ChipBrush", "#E9EDF3");
+            SetBrush("ChipHoverBrush", "#DDE5F0");
+            SetBrush("ProgressTrackBrush", "#E5E7EB");
         }
+        else
+        {
+            // Black base theme
+            SetBrush("BgBrush", "#000000");
+            SetBrush("CardBrush", "#121212");
+            SetBrush("InputBrush", "#0A0A0A");
+            SetBrush("BorderBrushColor", "#2A2A2A");
+            SetBrush("TextBrush", "#F5F5F5");
+            SetBrush("SubtleTextBrush", "#A3A3A3");
+            SetBrush("GhostBrush", "#242424");
+            SetBrush("ChipBrush", "#1E1E1E");
+            SetBrush("ChipHoverBrush", "#2C2C2C");
+            SetBrush("ProgressTrackBrush", "#2A2A2A");
+        }
+
+        // Accent colors affect buttons/highlights/progress
+        switch (_accent)
+        {
+            case "Orange":
+                SetBrush("AccentBrush", "#F97316"); SetBrush("Accent2Brush", "#FDBA74"); break;
+            case "Red":
+                SetBrush("AccentBrush", "#EF4444"); SetBrush("Accent2Brush", "#F87171"); break;
+            case "Green":
+                SetBrush("AccentBrush", "#10B981"); SetBrush("Accent2Brush", "#34D399"); break;
+            case "Purple":
+                SetBrush("AccentBrush", "#A855F7"); SetBrush("Accent2Brush", "#C084FC"); break;
+            case "Teal":
+                SetBrush("AccentBrush", "#14B8A6"); SetBrush("Accent2Brush", "#5EEAD4"); break;
+            case "Blue":
+            default:
+                SetBrush("AccentBrush", "#3B82F6"); SetBrush("Accent2Brush", "#60A5FA"); break;
+        }
+
         Background = (Brush)Application.Current.Resources["BgBrush"];
         Foreground = (Brush)Application.Current.Resources["TextBrush"];
-    }
 
-    private void ApplyPalette(string bg, string card, string input, string border, string text, string subtle, string ghost, string chip, string chipHover, string progress, string accent, string accent2)
-    {
-        SetBrush("BgBrush", bg);
-        SetBrush("CardBrush", card);
-        SetBrush("InputBrush", input);
-        SetBrush("BorderBrushColor", border);
-        SetBrush("TextBrush", text);
-        SetBrush("SubtleTextBrush", subtle);
-        SetBrush("GhostBrush", ghost);
-        SetBrush("ChipBrush", chip);
-        SetBrush("ChipHoverBrush", chipHover);
-        SetBrush("ProgressTrackBrush", progress);
-        SetBrush("AccentBrush", accent);
-        SetBrush("Accent2Brush", accent2);
+        // Visual hint for selected mode buttons
+        if (BlackModeButton != null) BlackModeButton.Opacity = _baseTheme == "Black" ? 1.0 : 0.7;
+        if (WhiteModeButton != null) WhiteModeButton.Opacity = _baseTheme == "White" ? 1.0 : 0.7;
     }
 
     private void Preset_Click(object sender, RoutedEventArgs e)
