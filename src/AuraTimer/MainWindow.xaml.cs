@@ -14,10 +14,80 @@ namespace AuraTimer;
 public partial class MainWindow : Window
 {
     private readonly List<TimerEntry> _timers = new();
+    private bool _isDarkTheme = true;
+    private bool _widgetMode;
 
     public MainWindow()
     {
         InitializeComponent();
+    }
+
+    private void ThemeToggle_Click(object sender, RoutedEventArgs e)
+    {
+        _isDarkTheme = !_isDarkTheme;
+        ApplyTheme(_isDarkTheme);
+        if (ThemeButton != null) ThemeButton.Content = _isDarkTheme ? "Theme: Dark" : "Theme: Light";
+    }
+
+    private void PinToggle_Changed(object sender, RoutedEventArgs e)
+    {
+        Topmost = PinToggle?.IsChecked == true;
+    }
+
+    private void WidgetMode_Click(object sender, RoutedEventArgs e)
+    {
+        _widgetMode = !_widgetMode;
+        var visibility = _widgetMode ? Visibility.Collapsed : Visibility.Visible;
+        if (PresetsCard != null) PresetsCard.Visibility = visibility;
+        if (CustomCard != null) CustomCard.Visibility = visibility;
+        if (WidgetModeButton != null) WidgetModeButton.Content = _widgetMode ? "Full mode" : "Widget mode";
+        Width = _widgetMode ? 380 : 460;
+        Height = _widgetMode ? 520 : 720;
+    }
+
+    private static void SetBrush(string key, string color)
+    {
+        if (Application.Current.Resources[key] is SolidColorBrush b)
+        {
+            if (b.IsFrozen) Application.Current.Resources[key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
+            else b.Color = (Color)ColorConverter.ConvertFromString(color);
+        }
+        else
+        {
+            Application.Current.Resources[key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
+        }
+    }
+
+    private void ApplyTheme(bool dark)
+    {
+        if (dark)
+        {
+            SetBrush("BgBrush", "#0F172A");
+            SetBrush("CardBrush", "#1E293B");
+            SetBrush("InputBrush", "#0B1220");
+            SetBrush("BorderBrushColor", "#334155");
+            SetBrush("TextBrush", "#E5E7EB");
+            SetBrush("SubtleTextBrush", "#94A3B8");
+            SetBrush("GhostBrush", "#334155");
+            SetBrush("ChipBrush", "#334155");
+            SetBrush("ChipHoverBrush", "#475569");
+            SetBrush("ProgressTrackBrush", "#334155");
+        }
+        else
+        {
+            SetBrush("BgBrush", "#F3F6FB");
+            SetBrush("CardBrush", "#FFFFFF");
+            SetBrush("InputBrush", "#F8FAFC");
+            SetBrush("BorderBrushColor", "#D5DEEA");
+            SetBrush("TextBrush", "#0F172A");
+            SetBrush("SubtleTextBrush", "#64748B");
+            SetBrush("GhostBrush", "#E2E8F0");
+            SetBrush("ChipBrush", "#E8EEF8");
+            SetBrush("ChipHoverBrush", "#DCE6F5");
+            SetBrush("ProgressTrackBrush", "#E2E8F0");
+        }
+        Background = (Brush)Application.Current.Resources["BgBrush"];
+        Foreground = (Brush)Application.Current.Resources["TextBrush"];
     }
 
     private void Preset_Click(object sender, RoutedEventArgs e)
@@ -80,16 +150,16 @@ public partial class MainWindow : Window
         headerGrid.Children.Add(titleStack);
         headerGrid.Children.Add(timeText);
 
-        var progressBg = new Border { Background = new SolidColorBrush(Color.FromRgb(51,65,85)), CornerRadius = new CornerRadius(4), Height = 8, Margin = new Thickness(0,12,0,12) };
-        var progressFg = new Border { Background = (Brush)FindResource("Accent2Brush"), CornerRadius = new CornerRadius(4), Height = 8, HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
+        var progressBg = new Border { Background = (Brush)Application.Current.Resources["ProgressTrackBrush"], CornerRadius = new CornerRadius(4), Height = 8, Margin = new Thickness(0,12,0,12) };
+        var progressFg = new Border { Background = (Brush)Application.Current.Resources["Accent2Brush"], CornerRadius = new CornerRadius(4), Height = 8, HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
         var progressGrid = new Grid();
         progressGrid.Children.Add(progressBg);
         progressGrid.Children.Add(progressFg);
 
         var startPause = new Button { Content = "Pause", Style = (Style)FindResource("PrimaryButton"), MinWidth = 90, Margin = new Thickness(0,0,8,0) };
         var reset = new Button { Content = "Reset", Style = (Style)FindResource("GhostButton"), MinWidth = 80, Margin = new Thickness(0,0,8,0) };
-        var remove = new Button { Content = "Remove", Style = (Style)FindResource("GhostButton"), MinWidth = 80 };
-        remove.Background = new SolidColorBrush(Color.FromRgb(127,29,29));
+        var remove = new Button { Content = "Remove", Style = (Style)FindResource("GhostButton"), MinWidth = 80, Foreground = Brushes.White };
+        remove.Background = (Brush)Application.Current.Resources["DangerBrush"];
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal };
         buttons.Children.Add(startPause);

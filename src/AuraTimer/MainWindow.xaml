@@ -1,11 +1,12 @@
 ﻿<Window x:Class="AuraTimer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Aura Timer" Height="720" Width="460" MinHeight="520" MinWidth="380"
-        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
+        Title="Aura Timer" Height="720" Width="460" MinHeight="420" MinWidth="340"
+        Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}"
         WindowStartupLocation="CenterScreen">
     <Grid Margin="18">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -13,7 +14,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" Margin="0,0,0,14">
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
             <Border Width="40" Height="40" CornerRadius="12" Margin="0,0,12,0" DockPanel.Dock="Left">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -25,59 +26,67 @@
             </Border>
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="Aura Timer" FontSize="24" FontWeight="Bold"/>
-                <TextBlock Text="Clean, modern countdowns with sound &amp; notifications" Foreground="{StaticResource SubtleTextBrush}" FontSize="12"/>
+                <TextBlock Text="Desktop timer widget with sound &amp; notifications" Foreground="{DynamicResource SubtleTextBrush}" FontSize="12"/>
             </StackPanel>
         </DockPanel>
 
-        <Border Grid.Row="1" Background="{StaticResource CardBrush}" CornerRadius="16" Padding="14" Margin="0,0,0,12">
+        <Border Grid.Row="1" Background="{DynamicResource CardBrush}" CornerRadius="14" Padding="10" Margin="0,0,0,12">
+            <WrapPanel VerticalAlignment="Center">
+                <Button x:Name="ThemeButton" Style="{DynamicResource ChipButton}" Content="Theme: Dark" Click="ThemeToggle_Click" Margin="0,0,8,0"/>
+                <ToggleButton x:Name="PinToggle" Content="Pin on top" Checked="PinToggle_Changed" Unchecked="PinToggle_Changed" Margin="0,0,8,0" Padding="10,6"/>
+                <Button x:Name="WidgetModeButton" Style="{DynamicResource ChipButton}" Content="Widget mode" Click="WidgetMode_Click" Margin="0"/>
+            </WrapPanel>
+        </Border>
+
+        <Border x:Name="PresetsCard" Grid.Row="2" Background="{DynamicResource CardBrush}" CornerRadius="16" Padding="14" Margin="0,0,0,12">
             <StackPanel>
                 <TextBlock Text="Quick presets" FontWeight="SemiBold" Margin="0,0,0,8"/>
                 <WrapPanel>
-                    <Button Style="{StaticResource ChipButton}" Content="2 min" Click="Preset_Click" Tag="2"/>
-                    <Button Style="{StaticResource ChipButton}" Content="5 min" Click="Preset_Click" Tag="5"/>
-                    <Button Style="{StaticResource ChipButton}" Content="10 min" Click="Preset_Click" Tag="10"/>
-                    <Button Style="{StaticResource ChipButton}" Content="15 min" Click="Preset_Click" Tag="15"/>
-                    <Button Style="{StaticResource ChipButton}" Content="20 min" Click="Preset_Click" Tag="20"/>
-                    <Button Style="{StaticResource ChipButton}" Content="25 min" Click="Preset_Click" Tag="25"/>
-                    <Button Style="{StaticResource ChipButton}" Content="30 min" Click="Preset_Click" Tag="30"/>
-                    <Button Style="{StaticResource ChipButton}" Content="45 min" Click="Preset_Click" Tag="45"/>
-                    <Button Style="{StaticResource ChipButton}" Content="1 hour" Click="Preset_Click" Tag="60"/>
+                    <Button Style="{DynamicResource ChipButton}" Content="2 min" Click="Preset_Click" Tag="2"/>
+                    <Button Style="{DynamicResource ChipButton}" Content="5 min" Click="Preset_Click" Tag="5"/>
+                    <Button Style="{DynamicResource ChipButton}" Content="10 min" Click="Preset_Click" Tag="10"/>
+                    <Button Style="{DynamicResource ChipButton}" Content="15 min" Click="Preset_Click" Tag="15"/>
+                    <Button Style="{DynamicResource ChipButton}" Content="20 min" Click="Preset_Click" Tag="20"/>
+                    <Button Style="{DynamicResource ChipButton}" Content="25 min" Click="Preset_Click" Tag="25"/>
+                    <Button Style="{DynamicResource ChipButton}" Content="30 min" Click="Preset_Click" Tag="30"/>
+                    <Button Style="{DynamicResource ChipButton}" Content="45 min" Click="Preset_Click" Tag="45"/>
+                    <Button Style="{DynamicResource ChipButton}" Content="1 hour" Click="Preset_Click" Tag="60"/>
                 </WrapPanel>
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="16" Padding="14" Margin="0,0,0,12">
+        <Border x:Name="CustomCard" Grid.Row="3" Background="{DynamicResource CardBrush}" CornerRadius="16" Padding="14" Margin="0,0,0,12">
             <StackPanel>
                 <TextBlock Text="Custom timer" FontWeight="SemiBold" Margin="0,0,0,8"/>
                 <DockPanel LastChildFill="False">
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                         <StackPanel Margin="0,0,8,0">
-                            <TextBlock Text="Hours" Foreground="{StaticResource SubtleTextBrush}" FontSize="11"/>
-                            <TextBox x:Name="HoursBox" Width="54" Text="0" Padding="8" Background="#0B1220" Foreground="{StaticResource TextBrush}" BorderBrush="#334155"/>
+                            <TextBlock Text="Hours" Foreground="{DynamicResource SubtleTextBrush}" FontSize="11"/>
+                            <TextBox x:Name="HoursBox" Width="54" Text="0" Padding="8" Background="{DynamicResource InputBrush}" BorderBrush="{DynamicResource BorderBrushColor}"/>
                         </StackPanel>
                         <StackPanel Margin="0,0,8,0">
-                            <TextBlock Text="Minutes" Foreground="{StaticResource SubtleTextBrush}" FontSize="11"/>
-                            <TextBox x:Name="MinutesBox" Width="64" Text="5" Padding="8" Background="#0B1220" Foreground="{StaticResource TextBrush}" BorderBrush="#334155"/>
+                            <TextBlock Text="Minutes" Foreground="{DynamicResource SubtleTextBrush}" FontSize="11"/>
+                            <TextBox x:Name="MinutesBox" Width="64" Text="5" Padding="8" Background="{DynamicResource InputBrush}" BorderBrush="{DynamicResource BorderBrushColor}"/>
                         </StackPanel>
                         <StackPanel>
-                            <TextBlock Text="Seconds" Foreground="{StaticResource SubtleTextBrush}" FontSize="11"/>
-                            <TextBox x:Name="SecondsBox" Width="64" Text="0" Padding="8" Background="#0B1220" Foreground="{StaticResource TextBrush}" BorderBrush="#334155"/>
+                            <TextBlock Text="Seconds" Foreground="{DynamicResource SubtleTextBrush}" FontSize="11"/>
+                            <TextBox x:Name="SecondsBox" Width="64" Text="0" Padding="8" Background="{DynamicResource InputBrush}" BorderBrush="{DynamicResource BorderBrushColor}"/>
                         </StackPanel>
                     </StackPanel>
-                    <Button Style="{StaticResource PrimaryButton}" Content="Add timer" Click="AddCustom_Click" Margin="12,14,0,0" DockPanel.Dock="Right"/>
+                    <Button Style="{DynamicResource PrimaryButton}" Content="Add timer" Click="AddCustom_Click" Margin="12,14,0,0" DockPanel.Dock="Right"/>
                 </DockPanel>
                 <DockPanel Margin="0,8,0,0">
-                    <TextBlock Text="Label (optional)" Foreground="{StaticResource SubtleTextBrush}" FontSize="11" DockPanel.Dock="Top"/>
-                    <TextBox x:Name="LabelBox" Padding="8" Background="#0B1220" Foreground="{StaticResource TextBrush}" BorderBrush="#334155" />
+                    <TextBlock Text="Label (optional)" Foreground="{DynamicResource SubtleTextBrush}" FontSize="11" DockPanel.Dock="Top"/>
+                    <TextBox x:Name="LabelBox" Padding="8" Background="{DynamicResource InputBrush}" BorderBrush="{DynamicResource BorderBrushColor}" />
                 </DockPanel>
             </StackPanel>
         </Border>
 
-        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="TimersPanel" />
         </ScrollViewer>
 
-        <TextBlock Grid.Row="4" Margin="0,10,0,0" Foreground="{StaticResource SubtleTextBrush}" FontSize="11" TextWrapping="Wrap"
-                   Text="Tip: add multiple timers and keep this widget open. When a timer ends you'll get a sound and notification."/>
+        <TextBlock Grid.Row="5" Margin="0,10,0,0" Foreground="{DynamicResource SubtleTextBrush}" FontSize="11" TextWrapping="Wrap"
+                   Text="Pin on top to keep Aura Timer on your desktop. Widget mode hides setup panels for a compact view."/>
     </Grid>
 </Window>
