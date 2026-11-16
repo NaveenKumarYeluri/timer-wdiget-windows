@@ -1,0 +1,40 @@
+﻿name: build
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/AuraTimer/AuraTimer.csproj
+
+      - name: Publish (framework-dependent)
+        run: dotnet publish src/AuraTimer/AuraTimer.csproj -c Release -r win-x64 --self-contained false -o artifacts/AuraTimer-win-x64-framework-dependent
+
+      - name: Publish (self-contained)
+        run: dotnet publish src/AuraTimer/AuraTimer.csproj -c Release -r win-x64 --self-contained true -o artifacts/AuraTimer-win-x64-self-contained
+
+      - name: Upload artifact (framework-dependent)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuraTimer-win-x64-framework-dependent
+          path: artifacts/AuraTimer-win-x64-framework-dependent
+
+      - name: Upload artifact (self-contained)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuraTimer-win-x64-self-contained
+          path: artifacts/AuraTimer-win-x64-self-contained
