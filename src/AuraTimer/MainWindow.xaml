@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Aura Timer" Height="720" Width="460" MinHeight="520" MinWidth="380"
         Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
-        WindowStartupLocation="CenterScreen" Icon="Assets/app.ico">
+        WindowStartupLocation="CenterScreen">
     <Grid Margin="18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
