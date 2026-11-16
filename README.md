@@ -12,7 +12,7 @@
 
 ## Project structure
 
-- `src/AuraTimer/` – WPF (.NET 8) application source
+- `src/AuraTimer/` – WPF (.NET 10) application source
 - `src/AuraTimer/Assets/` – app icon and chime sound
 - `.github/workflows/build.yml` – GitHub Actions workflow to build and publish
 
@@ -20,7 +20,7 @@
 
 ### Prerequisites
 - Windows 10/11
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (includes Windows desktop support)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (includes Windows desktop support)
 
 ### Build & run
 ```powershell
@@ -31,7 +31,7 @@ dotnet run --project src/AuraTimer/AuraTimer.csproj
 ## Build with GitHub Actions
 
 This repo includes a workflow at `.github/workflows/build.yml` that builds and uploads **two** `win-x64` variants:
-1. **`AuraTimer-win-x64-framework-dependent`** (`--self-contained false`) – smaller download, requires the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) on the target machine.
+1. **`AuraTimer-win-x64-framework-dependent`** (`--self-contained false`) – smaller download, requires the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) on the target machine.
 2. **`AuraTimer-win-x64-self-contained`** (`--self-contained true`) – includes the runtime, no .NET installation required (larger download).
 
 To get the app:
