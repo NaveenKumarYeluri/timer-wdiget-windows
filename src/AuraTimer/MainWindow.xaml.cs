@@ -14,19 +14,21 @@ namespace AuraTimer;
 public partial class MainWindow : Window
 {
     private readonly List<TimerEntry> _timers = new();
-    private bool _isDarkTheme = true;
     private bool _widgetMode;
 
     public MainWindow()
     {
         InitializeComponent();
+        Loaded += (_, _) =>
+        {
+            if (ThemeCombo != null) ThemeCombo.SelectedIndex = 0; // Midnight (Blue)
+        };
     }
 
-    private void ThemeToggle_Click(object sender, RoutedEventArgs e)
+    private void ThemeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        _isDarkTheme = !_isDarkTheme;
-        ApplyTheme(_isDarkTheme);
-        if (ThemeButton != null) ThemeButton.Content = _isDarkTheme ? "Theme: Dark" : "Theme: Light";
+        if (ThemeCombo?.SelectedItem is ComboBoxItem item)
+            ApplyTheme(item.Tag?.ToString() ?? "Midnight");
     }
 
     private void PinToggle_Changed(object sender, RoutedEventArgs e)
@@ -58,36 +60,51 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ApplyTheme(bool dark)
+    private void ApplyTheme(string theme)
     {
-        if (dark)
+        switch (theme)
         {
-            SetBrush("BgBrush", "#0F172A");
-            SetBrush("CardBrush", "#1E293B");
-            SetBrush("InputBrush", "#0B1220");
-            SetBrush("BorderBrushColor", "#334155");
-            SetBrush("TextBrush", "#E5E7EB");
-            SetBrush("SubtleTextBrush", "#94A3B8");
-            SetBrush("GhostBrush", "#334155");
-            SetBrush("ChipBrush", "#334155");
-            SetBrush("ChipHoverBrush", "#475569");
-            SetBrush("ProgressTrackBrush", "#334155");
-        }
-        else
-        {
-            SetBrush("BgBrush", "#F3F6FB");
-            SetBrush("CardBrush", "#FFFFFF");
-            SetBrush("InputBrush", "#F8FAFC");
-            SetBrush("BorderBrushColor", "#D5DEEA");
-            SetBrush("TextBrush", "#0F172A");
-            SetBrush("SubtleTextBrush", "#64748B");
-            SetBrush("GhostBrush", "#E2E8F0");
-            SetBrush("ChipBrush", "#E8EEF8");
-            SetBrush("ChipHoverBrush", "#DCE6F5");
-            SetBrush("ProgressTrackBrush", "#E2E8F0");
+            case "Black":
+                ApplyPalette("#000000", "#121212", "#0A0A0A", "#2A2A2A", "#F5F5F5", "#A3A3A3", "#2A2A2A", "#2A2A2A", "#3A3A3A", "#2A2A2A", "#7C5CFF", "#22D3EE");
+                break;
+            case "Light":
+                ApplyPalette("#F3F6FB", "#FFFFFF", "#F8FAFC", "#D5DEEA", "#0F172A", "#64748B", "#E2E8F0", "#E8EEF8", "#DCE6F5", "#E2E8F0", "#6C5CE7", "#0EA5E9");
+                break;
+            case "Orange":
+                ApplyPalette("#140D08", "#1F140C", "#120B07", "#3A2818", "#FFF3E8", "#D6BFA8", "#3A2818", "#3A2818", "#4A3320", "#3A2818", "#F97316", "#FDBA74");
+                break;
+            case "Red":
+                ApplyPalette("#14090B", "#1F1014", "#12080A", "#3A1E25", "#FFECEE", "#D8B0B7", "#3A1E25", "#3A1E25", "#4A2730", "#3A1E25", "#EF4444", "#F87171");
+                break;
+            case "Green":
+                ApplyPalette("#07120D", "#0E1B14", "#06100B", "#1E3528", "#E9FFF4", "#A9D2BC", "#1E3528", "#1E3528", "#294538", "#1E3528", "#10B981", "#34D399");
+                break;
+            case "Purple":
+                ApplyPalette("#100A18", "#171026", "#0D0814", "#30214A", "#F5EEFF", "#C8B3E6", "#30214A", "#30214A", "#3C2A5C", "#30214A", "#A855F7", "#C084FC");
+                break;
+            case "Midnight":
+            default:
+                ApplyPalette("#0F172A", "#1E293B", "#0B1220", "#334155", "#E5E7EB", "#94A3B8", "#334155", "#334155", "#475569", "#334155", "#7C5CFF", "#22D3EE");
+                break;
         }
         Background = (Brush)Application.Current.Resources["BgBrush"];
         Foreground = (Brush)Application.Current.Resources["TextBrush"];
+    }
+
+    private void ApplyPalette(string bg, string card, string input, string border, string text, string subtle, string ghost, string chip, string chipHover, string progress, string accent, string accent2)
+    {
+        SetBrush("BgBrush", bg);
+        SetBrush("CardBrush", card);
+        SetBrush("InputBrush", input);
+        SetBrush("BorderBrushColor", border);
+        SetBrush("TextBrush", text);
+        SetBrush("SubtleTextBrush", subtle);
+        SetBrush("GhostBrush", ghost);
+        SetBrush("ChipBrush", chip);
+        SetBrush("ChipHoverBrush", chipHover);
+        SetBrush("ProgressTrackBrush", progress);
+        SetBrush("AccentBrush", accent);
+        SetBrush("Accent2Brush", accent2);
     }
 
     private void Preset_Click(object sender, RoutedEventArgs e)

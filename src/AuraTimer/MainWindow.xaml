@@ -32,8 +32,20 @@
 
         <Border Grid.Row="1" Background="{DynamicResource CardBrush}" CornerRadius="14" Padding="10" Margin="0,0,0,12">
             <WrapPanel VerticalAlignment="Center">
-                <Button x:Name="ThemeButton" Style="{DynamicResource ChipButton}" Content="Theme: Dark" Click="ThemeToggle_Click" Margin="0,0,8,0"/>
-                <ToggleButton x:Name="PinToggle" Content="Pin on top" Checked="PinToggle_Changed" Unchecked="PinToggle_Changed" Margin="0,0,8,0" Padding="10,6"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
+                    <TextBlock Text="Theme" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource SubtleTextBrush}"/>
+                    <ComboBox x:Name="ThemeCombo" Width="150" SelectionChanged="ThemeCombo_SelectionChanged"
+                              Background="{DynamicResource InputBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource BorderBrushColor}">
+                        <ComboBoxItem Content="Midnight (Blue)" Tag="Midnight"/>
+                        <ComboBoxItem Content="Black" Tag="Black"/>
+                        <ComboBoxItem Content="Light" Tag="Light"/>
+                        <ComboBoxItem Content="Orange" Tag="Orange"/>
+                        <ComboBoxItem Content="Red" Tag="Red"/>
+                        <ComboBoxItem Content="Green" Tag="Green"/>
+                        <ComboBoxItem Content="Purple" Tag="Purple"/>
+                    </ComboBox>
+                </StackPanel>
+                <ToggleButton x:Name="PinToggle" Style="{DynamicResource ChipToggleButton}" Content="Pin on top" Checked="PinToggle_Changed" Unchecked="PinToggle_Changed"/>
                 <Button x:Name="WidgetModeButton" Style="{DynamicResource ChipButton}" Content="Widget mode" Click="WidgetMode_Click" Margin="0"/>
             </WrapPanel>
         </Border>
