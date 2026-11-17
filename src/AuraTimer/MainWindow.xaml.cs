@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Media;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,14 +15,37 @@ namespace AuraTimer;
 public partial class MainWindow : Window
 {
     private readonly List<TimerEntry> _timers = new();
+    private AppSettings _settings = new();
     private bool _widgetMode;
-    private string _baseTheme = "Black";
+    private string _baseTheme = "White";
     private string _accent = "Blue";
+    private bool _quickEditMode;
+    private bool _loaded;
+    private bool _suppressSizeSave;
+    private int _ticksSinceSave;
 
     public MainWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => ApplyAppearance();
+
+        _settings = SettingsService.Load();
+        _baseTheme = _settings.BaseTheme == "Black" ? "Black" : "White";
+        _accent = string.IsNullOrWhiteSpace(_settings.Accent) ? "Blue" : _settings.Accent;
+        _widgetMode = _settings.WidgetMode;
+
+        ApplyAppearance();
+
+        Loaded += (_, _) =>
+        {
+            ApplyWidgetMode(_widgetMode, resize: false);
+            RestoreWindowSize();
+            RestoreTimers();
+            RenderQuickChips();
+            _loaded = true;
+        };
+
+        Closing += (_, _) => SaveState();
+        SizeChanged += (_, _) => SaveWindowSize();
     }
 
     private void BaseTheme_Click(object sender, RoutedEventArgs e)
@@ -30,6 +54,7 @@ public partial class MainWindow : Window
         {
             _baseTheme = tag;
             ApplyAppearance();
+            SaveState();
         }
     }
 
@@ -39,23 +64,188 @@ public partial class MainWindow : Window
         {
             _accent = tag;
             ApplyAppearance();
+            SaveState();
         }
     }
 
     private void PinToggle_Changed(object sender, RoutedEventArgs e)
     {
         Topmost = PinToggle?.IsChecked == true;
+        SaveState();
     }
 
     private void WidgetMode_Click(object sender, RoutedEventArgs e)
     {
         _widgetMode = !_widgetMode;
-        var visibility = _widgetMode ? Visibility.Collapsed : Visibility.Visible;
-        if (PresetsCard != null) PresetsCard.Visibility = visibility;
-        if (CustomCard != null) CustomCard.Visibility = visibility;
-        if (WidgetModeButton != null) WidgetModeButton.Content = _widgetMode ? "Full mode" : "Widget mode";
-        Width = _widgetMode ? 380 : 460;
-        Height = _widgetMode ? 520 : 720;
+        ApplyWidgetMode(_widgetMode, resize: true);
+        SaveState();
+    }
+
+    private void ApplyWidgetMode(bool widget, bool resize)
+    {
+        var setupVisibility = widget ? Visibility.Collapsed : Visibility.Visible;
+        if (PresetsCard != null) PresetsCard.Visibility = setupVisibility;
+        if (CustomCard != null) CustomCard.Visibility = setupVisibility;
+        if (QuickStartCard != null) QuickStartCard.Visibility = widget ? Visibility.Visible : Visibility.Collapsed;
+        if (WidgetModeButton != null) WidgetModeButton.Content = widget ? "Full mode" : "Widget mode";
+        if (!resize) return;
+
+        _suppressSizeSave = true;
+        if (widget)
+        {
+            _settings.FullWidth = Width;
+            _settings.FullHeight = Height;
+            Width = _settings.WidgetWidth;
+            Height = _settings.WidgetHeight;
+        }
+        else
+        {
+            _settings.WidgetWidth = Width;
+            _settings.WidgetHeight = Height;
+            Width = _settings.FullWidth;
+            Height = _settings.FullHeight;
+        }
+        _suppressSizeSave = false;
+    }
+
+    private void RestoreWindowSize()
+    {
+        _suppressSizeSave = true;
+        if (_widgetMode)
+        {
+            if (_settings.WidgetWidth >= MinWidth) Width = _settings.WidgetWidth;
+            if (_settings.WidgetHeight >= MinHeight) Height = _settings.WidgetHeight;
+        }
+        else
+        {
+            if (_settings.FullWidth >= MinWidth) Width = _settings.FullWidth;
+            if (_settings.FullHeight >= MinHeight) Height = _settings.FullHeight;
+        }
+        _suppressSizeSave = false;
+    }
+
+    private void SaveWindowSize()
+    {
+        if (!_loaded || _suppressSizeSave) return;
+        if (_widgetMode)
+        {
+            _settings.WidgetWidth = Width;
+            _settings.WidgetHeight = Height;
+        }
+        else
+        {
+            _settings.FullWidth = Width;
+            _settings.FullHeight = Height;
+        }
+        SaveState();
+    }
+
+    private void SaveState()
+    {
+        if (!_loaded) return;
+        _settings.BaseTheme = _baseTheme;
+        _settings.Accent = _accent;
+        _settings.WidgetMode = _widgetMode;
+        _settings.PinOnTop = PinToggle?.IsChecked == true;
+        if (QuickChipsPanel?.Tag is List<int> list) _settings.WidgetQuickSeconds = new List<int>(list);
+        _settings.Timers = _timers.Where(t => !t.IsDisposed).Select(t => new SavedTimer
+        {
+            DurationSeconds = t.Duration.TotalSeconds,
+            RemainingSeconds = t.Remaining.TotalSeconds,
+            Label = t.Label,
+            IsCompleted = t.IsCompleted,
+            WasRunning = t.IsRunning
+        }).ToList();
+        SettingsService.Save(_settings);
+    }
+
+    private void QuickEdit_Click(object sender, RoutedEventArgs e)
+    {
+        _quickEditMode = !_quickEditMode;
+        if (QuickEditPanel != null) QuickEditPanel.Visibility = _quickEditMode ? Visibility.Visible : Visibility.Collapsed;
+        if (QuickEditButton != null) QuickEditButton.Content = _quickEditMode ? "Done" : "Edit";
+        RenderQuickChips();
+    }
+
+    private void QuickAdd_Click(object sender, RoutedEventArgs e)
+    {
+        if (!int.TryParse(QuickMinutesBox.Text, out var minutes) || minutes <= 0) return;
+        GetQuickSeconds().Add(minutes * 60);
+        GetQuickSeconds().Sort();
+        RenderQuickChips();
+        SaveState();
+    }
+
+    private void QuickReset_Click(object sender, RoutedEventArgs e)
+    {
+        var list = GetQuickSeconds();
+        list.Clear();
+        list.AddRange(new[] { 20 * 60, 25 * 60, 30 * 60 });
+        RenderQuickChips();
+        SaveState();
+    }
+
+    private List<int> GetQuickSeconds()
+    {
+        if (QuickChipsPanel?.Tag is List<int> list) return list;
+        var created = (_settings.WidgetQuickSeconds?.Count > 0)
+            ? new List<int>(_settings.WidgetQuickSeconds)
+            : new List<int> { 20 * 60, 25 * 60, 30 * 60 };
+        created.Sort();
+        if (QuickChipsPanel != null) QuickChipsPanel.Tag = created;
+        return created;
+    }
+
+    private void RenderQuickChips()
+    {
+        if (QuickChipsPanel == null) return;
+        QuickChipsPanel.Children.Clear();
+        foreach (var seconds in GetQuickSeconds())
+        {
+            var label = FormatDuration(TimeSpan.FromSeconds(seconds));
+            if (_quickEditMode) label += "  ✕";
+            var chip = new Button
+            {
+                Content = label,
+                Style = (Style)FindResource("ChipButton"),
+                Tag = seconds
+            };
+            chip.Click += (_, _) =>
+            {
+                if (_quickEditMode)
+                {
+                    GetQuickSeconds().Remove(seconds);
+                    RenderQuickChips();
+                    SaveState();
+                }
+                else
+                {
+                    AddTimer(TimeSpan.FromSeconds(seconds), FormatDuration(TimeSpan.FromSeconds(seconds)));
+                }
+            };
+            QuickChipsPanel.Children.Add(chip);
+        }
+    }
+
+    private void RestoreTimers()
+    {
+        if (_settings.Timers == null) return;
+        foreach (var saved in _settings.Timers)
+        {
+            if (saved.DurationSeconds < 1) continue;
+            var duration = TimeSpan.FromSeconds(saved.DurationSeconds);
+            var remaining = TimeSpan.FromSeconds(Math.Clamp(saved.RemainingSeconds, 0, saved.DurationSeconds));
+            var entry = new TimerEntry(duration, string.IsNullOrWhiteSpace(saved.Label) ? FormatDuration(duration) : saved.Label, remaining, saved.IsCompleted);
+            _timers.Add(entry);
+            var card = CreateCard(entry);
+            entry.Card = card;
+            TimersPanel.Children.Add(card);
+            if (!entry.IsCompleted && saved.WasRunning)
+            {
+                entry.Start();
+            }
+            UpdateCardState(entry);
+        }
     }
 
     private static void SetBrush(string key, string color)
@@ -75,7 +265,6 @@ public partial class MainWindow : Window
     {
         if (_baseTheme == "White")
         {
-            // White base theme
             SetBrush("BgBrush", "#FFFFFF");
             SetBrush("CardBrush", "#F6F7F9");
             SetBrush("InputBrush", "#FFFFFF");
@@ -89,7 +278,6 @@ public partial class MainWindow : Window
         }
         else
         {
-            // Black base theme
             SetBrush("BgBrush", "#000000");
             SetBrush("CardBrush", "#121212");
             SetBrush("InputBrush", "#0A0A0A");
@@ -102,7 +290,6 @@ public partial class MainWindow : Window
             SetBrush("ProgressTrackBrush", "#2A2A2A");
         }
 
-        // Accent colors affect buttons/highlights/progress
         switch (_accent)
         {
             case "Orange":
@@ -117,15 +304,28 @@ public partial class MainWindow : Window
                 SetBrush("AccentBrush", "#14B8A6"); SetBrush("Accent2Brush", "#5EEAD4"); break;
             case "Blue":
             default:
-                SetBrush("AccentBrush", "#3B82F6"); SetBrush("Accent2Brush", "#60A5FA"); break;
+                SetBrush("AccentBrush", "#2563EB"); SetBrush("Accent2Brush", "#60A5FA"); break;
         }
 
         Background = (Brush)Application.Current.Resources["BgBrush"];
         Foreground = (Brush)Application.Current.Resources["TextBrush"];
 
-        // Visual hint for selected mode buttons
-        if (BlackModeButton != null) BlackModeButton.Opacity = _baseTheme == "Black" ? 1.0 : 0.7;
-        if (WhiteModeButton != null) WhiteModeButton.Opacity = _baseTheme == "White" ? 1.0 : 0.7;
+        if (BlackModeButton != null) BlackModeButton.Opacity = _baseTheme == "Black" ? 1.0 : 0.6;
+        if (WhiteModeButton != null) WhiteModeButton.Opacity = _baseTheme == "White" ? 1.0 : 0.6;
+        if (AccentPanel != null)
+        {
+            foreach (var child in AccentPanel.Children)
+            {
+                if (child is Button b && b.Tag is string tag)
+                    b.Opacity = string.Equals(tag, _accent, StringComparison.OrdinalIgnoreCase) ? 1.0 : 0.6;
+            }
+        }
+
+        if (PinToggle != null)
+        {
+            PinToggle.IsChecked = _settings.PinOnTop;
+            Topmost = _settings.PinOnTop;
+        }
     }
 
     private void Preset_Click(object sender, RoutedEventArgs e)
@@ -162,6 +362,7 @@ public partial class MainWindow : Window
         entry.Card = card;
         TimersPanel.Children.Insert(0, card);
         entry.Start();
+        SaveState();
     }
 
     private Border CreateCard(TimerEntry entry)
@@ -226,16 +427,18 @@ public partial class MainWindow : Window
 
         startPause.Click += (_, _) =>
         {
-            if (entry.IsCompleted) { entry.Reset(); entry.Start(); return; }
+            if (entry.IsCompleted) { entry.Reset(); entry.Start(); UpdateCardState(entry); SaveState(); return; }
             if (entry.IsRunning) entry.Pause(); else entry.Start();
             UpdateCardState(entry);
+            SaveState();
         };
-        reset.Click += (_, _) => { entry.Reset(); UpdateCardState(entry); };
+        reset.Click += (_, _) => { entry.Reset(); UpdateCardState(entry); SaveState(); };
         remove.Click += (_, _) =>
         {
             entry.Dispose();
             _timers.Remove(entry);
             TimersPanel.Children.Remove(card);
+            SaveState();
         };
 
         progressBg.SizeChanged += (_, _) => UpdateProgress(entry);
@@ -249,6 +452,13 @@ public partial class MainWindow : Window
     {
         if (entry.TimeText != null) entry.TimeText.Text = FormatTime(entry.Remaining);
         UpdateProgress(entry);
+
+        _ticksSinceSave++;
+        if (_ticksSinceSave >= 15)
+        {
+            _ticksSinceSave = 0;
+            SaveState();
+        }
     }
 
     private void OnEntryCompleted(TimerEntry entry)
@@ -257,6 +467,7 @@ public partial class MainWindow : Window
         if (entry.StatusText != null) { entry.StatusText.Text = "Time's up"; entry.StatusText.Foreground = (Brush)FindResource("SuccessBrush"); }
         if (entry.StartPauseButton != null) entry.StartPauseButton.Content = "Restart";
         UpdateProgress(entry);
+        SaveState();
         PlayChime();
         ShowToast(entry.Label);
         ShowInAppAlert(entry.Label);
@@ -343,31 +554,60 @@ public partial class MainWindow : Window
     {
         try
         {
+            var message = string.IsNullOrWhiteSpace(label) ? "Your countdown has finished." : $"{label} is done.";
+
+            var ok = new Button
+            {
+                Content = "OK",
+                Style = (Style)FindResource("PrimaryButton"),
+                MinWidth = 96,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                IsDefault = true
+            };
+
+            var root = new Grid { Margin = new Thickness(22) };
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            var heading = new TextBlock
+            {
+                Text = "⏰  Timer complete",
+                FontSize = 20,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            var body = new TextBlock
+            {
+                Text = message,
+                FontSize = 14,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 20)
+            };
+            Grid.SetRow(ok, 2);
+            Grid.SetRow(heading, 0);
+            Grid.SetRow(body, 1);
+            root.Children.Add(heading);
+            root.Children.Add(body);
+            root.Children.Add(ok);
+
             var win = new Window
             {
                 Title = "Aura Timer",
-                Width = 360,
-                Height = 160,
+                Width = 400,
+                MinWidth = 360,
+                SizeToContent = SizeToContent.Height,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = this,
                 ResizeMode = ResizeMode.NoResize,
-                WindowStyle = WindowStyle.ToolWindow,
+                ShowInTaskbar = false,
                 Topmost = true,
-                Background = (Brush)FindResource("CardBrush"),
-                Foreground = (Brush)FindResource("TextBrush"),
-                Content = new StackPanel
-                {
-                    Margin = new Thickness(20),
-                    Children =
-                    {
-                        new TextBlock { Text = "⏰  Timer complete", FontSize = 20, FontWeight = FontWeights.Bold, Margin = new Thickness(0,0,0,8) },
-                        new TextBlock { Text = string.IsNullOrWhiteSpace(label) ? "Your countdown has finished." : $"{label} is done.", FontSize = 14, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0,0,0,14) },
-                        new Button { Content = "OK", Style = (Style)FindResource("PrimaryButton"), HorizontalAlignment = HorizontalAlignment.Right, MinWidth = 80, IsDefault = true }
-                    }
-                }
+                Background = (Brush)Application.Current.Resources["CardBrush"],
+                Foreground = (Brush)Application.Current.Resources["TextBrush"],
+                Content = root
             };
-            if (win.Content is StackPanel sp && sp.Children[2] is Button ok)
-                ok.Click += (_, _) => win.Close();
+
+            ok.Click += (_, _) => win.Close();
             win.Show();
             win.Activate();
         }
@@ -383,6 +623,7 @@ public sealed class TimerEntry : IDisposable
     public string Label { get; }
     public bool IsRunning { get; private set; }
     public bool IsCompleted { get; private set; }
+    public bool IsDisposed { get; private set; }
 
     public Border? Card { get; set; }
     public TextBlock? TimeText { get; set; }
@@ -394,11 +635,14 @@ public sealed class TimerEntry : IDisposable
     public event Action? Tick;
     public event Action? Completed;
 
-    public TimerEntry(TimeSpan duration, string label)
+    public TimerEntry(TimeSpan duration, string label, TimeSpan? remaining = null, bool isCompleted = false)
     {
         Duration = duration;
-        Remaining = duration;
+        Remaining = remaining ?? duration;
+        if (Remaining < TimeSpan.Zero) Remaining = TimeSpan.Zero;
+        if (Remaining > duration) Remaining = duration;
         Label = label;
+        IsCompleted = isCompleted;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += (_, _) => OnTick();
     }
@@ -443,6 +687,7 @@ public sealed class TimerEntry : IDisposable
 
     public void Dispose()
     {
+        IsDisposed = true;
         _timer.Stop();
     }
 }

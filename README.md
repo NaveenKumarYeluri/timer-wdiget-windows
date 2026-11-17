@@ -8,7 +8,9 @@
 - **Quick presets**: 2, 5, 10, 15, 20, 25, 30, 45 minutes, and 1 hour.
 - **Custom countdowns**: set your own hours, minutes, and seconds with an optional label.
 - **Completion alerts**: sound + in-app notification when the set time is reached (plus a toast notification when supported).
-- **Modern UI**: compact, dark, Windows 11-friendly widget design.
+- **Modern UI**: compact, Windows 11-friendly widget design with a white or black base theme and selectable accent colors.
+- **Widget mode**: compact desktop view with a customizable quick-start row (defaults: 20, 25, 30 min) and pin-on-top support.
+- **Remembers everything**: theme, accent, pin state, widget mode, window size, quick-start times, and your timers are saved automatically between sessions.
 
 ## Project structure
 

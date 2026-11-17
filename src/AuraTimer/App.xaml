@@ -3,21 +3,21 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <!-- Dark theme defaults -->
-        <SolidColorBrush x:Key="BgBrush" Color="#0F172A"/>
-        <SolidColorBrush x:Key="CardBrush" Color="#1E293B"/>
-        <SolidColorBrush x:Key="InputBrush" Color="#0B1220"/>
-        <SolidColorBrush x:Key="BorderBrushColor" Color="#334155"/>
-        <SolidColorBrush x:Key="AccentBrush" Color="#7C5CFF"/>
-        <SolidColorBrush x:Key="Accent2Brush" Color="#22D3EE"/>
-        <SolidColorBrush x:Key="TextBrush" Color="#E5E7EB"/>
-        <SolidColorBrush x:Key="SubtleTextBrush" Color="#94A3B8"/>
+        <!-- Default (White) theme; themes are switched at runtime by MainWindow. -->
+        <SolidColorBrush x:Key="BgBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="CardBrush" Color="#F6F7F9"/>
+        <SolidColorBrush x:Key="InputBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="BorderBrushColor" Color="#D9DEE7"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#2563EB"/>
+        <SolidColorBrush x:Key="Accent2Brush" Color="#60A5FA"/>
+        <SolidColorBrush x:Key="TextBrush" Color="#111827"/>
+        <SolidColorBrush x:Key="SubtleTextBrush" Color="#6B7280"/>
         <SolidColorBrush x:Key="DangerBrush" Color="#EF4444"/>
         <SolidColorBrush x:Key="SuccessBrush" Color="#10B981"/>
-        <SolidColorBrush x:Key="GhostBrush" Color="#334155"/>
-        <SolidColorBrush x:Key="ChipBrush" Color="#334155"/>
-        <SolidColorBrush x:Key="ChipHoverBrush" Color="#475569"/>
-        <SolidColorBrush x:Key="ProgressTrackBrush" Color="#334155"/>
+        <SolidColorBrush x:Key="GhostBrush" Color="#E5E7EB"/>
+        <SolidColorBrush x:Key="ChipBrush" Color="#E9EDF3"/>
+        <SolidColorBrush x:Key="ChipHoverBrush" Color="#DDE5F0"/>
+        <SolidColorBrush x:Key="ProgressTrackBrush" Color="#E5E7EB"/>
 
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
