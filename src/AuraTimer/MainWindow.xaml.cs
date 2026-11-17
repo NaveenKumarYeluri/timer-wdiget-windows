@@ -326,6 +326,15 @@ public partial class MainWindow : Window
             PinToggle.IsChecked = _settings.PinOnTop;
             Topmost = _settings.PinOnTop;
         }
+
+        // Keep runtime-created timer cards in sync with the new palette.
+        foreach (var timer in _timers)
+        {
+            if (timer.Card != null) timer.Card.Background = (Brush)Application.Current.Resources["CardBrush"];
+            if (timer.ProgressBg != null) timer.ProgressBg.Background = (Brush)Application.Current.Resources["ProgressTrackBrush"];
+            if (timer.ProgressFg != null) timer.ProgressFg.Background = (Brush)Application.Current.Resources["Accent2Brush"];
+            UpdateCardState(timer);
+        }
     }
 
     private void Preset_Click(object sender, RoutedEventArgs e)
